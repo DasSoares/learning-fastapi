@@ -1,7 +1,7 @@
 from sqlalchemy import select, create_engine
-from app.database.sql_alchemy.schema_metadata.models import t_user
+from app.database.sql_alchemy.core.models import t_user
 from app.database.connection import engine, create_engine
-from app.database.sql_alchemy.schema_metadata.controllers.crud_model import CrudModel
+from app.database.sql_alchemy.core.controllers.crud_model import CrudModel
 
 # your code here
 class UserController(CrudModel):

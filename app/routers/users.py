@@ -7,7 +7,7 @@ from faker import Faker
 from app.exceptions import NotFoundException, BadRequestException, InternalServerErrorException
 # from validate_docbr import CPF
 
-from app.database.sql_alchemy.schema_metadata.controllers.users import UserController
+from app.database.sql_alchemy.core.controllers.users import UserController
 
 # your code here
 # Utilizada para agrupar e separar rotas
