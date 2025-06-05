@@ -34,6 +34,10 @@ Inicie o servidor em modo Dev em modo Development, recarrega automaticamente a c
 para produção
 > fastapi run
 
+### Parou o serviço e a porta continua sendo utilizada?
+Isso acontece muito no MacOS quando se usa o `Control + z`, quando o correto deve utilizar é `Control + c`, caso aconteça isso rode o comando abaixo no terminal.
+> kill -9 $(lsof -ti :8001)
+
 ### Acessar a documentação da API
 No navegador acesse o ip que está rodando e foi printado no terminal e adicione o barramento '/docs'
 > http://127.0.0.1:8000/docs

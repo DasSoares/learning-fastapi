@@ -1,7 +1,10 @@
-from fastapi import APIRouter, Query, Path
-from fastapi.responses import JSONResponse
-from app.forms.users import User, CreateUser, UpdateUser, Message
+from typing import Union
+
+from fastapi import APIRouter, Path
+from app.forms.users import User, CreateUser, UpdateUser
+from app.forms import NotFoundMessage, BadRequestMessage, InternalServerErrorMessage
 from faker import Faker
+from app.exceptions import NotFoundException, BadRequestException, InternalServerErrorException
 # from validate_docbr import CPF
 
 from app.database.sql_alchemy.schema_metadata.controllers.users import UserController
@@ -15,17 +18,21 @@ router = APIRouter(
 
 # Modelo de respostas, adicione os retornos para cada tipo de status: 200, 300, 400, 500 e etc
 responses_errors = {
+    400: {
+        "model": BadRequestMessage
+    },
     404: {
-        "model": Message
-    }
+        "model": NotFoundMessage
+    },
+    500: {
+        "model": InternalServerErrorMessage
+    },
 }
 
 
 @router.get(
     "/",
-    response_model=list[
-        User
-    ] | list,  # Lista ou array de usuário ou, dicionário. Mas sempre coloque o modelo de retorno para deixar o código mais conciso
+    response_model=Union[list[User], list],  # Lista ou array de usuário ou, dicionário. Mas sempre coloque o modelo de retorno para deixar o código mais conciso
     description="Retorna a lista de usuários",
 )
 async def user_list():
@@ -46,8 +53,7 @@ async def get_user(
     uc = UserController()
     user = uc.get(id)
     if not user:
-        message_error = Message(message="Usuário não encontrado")
-        return JSONResponse(content=message_error.model_dump(), status_code=404)
+        raise NotFoundException(detail="Usuário não encontrado")
     return user
 
 
@@ -55,7 +61,7 @@ async def get_user(
     "/",
     description="Cria usuário",
     # response_model=User,
-    status_code=204,
+    status_code=201,
     responses=responses_errors,
 )
 async def create_user(user: CreateUser):
@@ -64,7 +70,7 @@ async def create_user(user: CreateUser):
         uc.create(user.name.title(), user.email)
         uc.session.commit()
     except Exception as e:
-        return JSONResponse(Message(message=f"Erro ao inserir registro no banco. erro: {e.args}").model_dump(), 400)
+        return BadRequestException(f"Erro ao inserir registro no banco. erro: {e.args}")
     return
 
 
@@ -89,14 +95,12 @@ async def update_user(id: int, user: UpdateUser):
                 dic[key] = usr.get(key)
 
         if not isUpdated:
-            message = "Não foi possível alterar os dados do usuário"
-            return JSONResponse(Message(message=message).model_dump(), status_code=400)
+            return BadRequestException(detail="Não foi possível alterar os dados do usuário")
+        
         uc.update(id, dic.get("name"), dic.get("email"))
         uc.session.commit()
         return
-    return JSONResponse(
-        Message(message="Usuário não encontrado").model_dump(), status_code=404
-    )
+    return NotFoundException(detail="Usuário não encontrado")
 
 
 @router.delete(
@@ -116,15 +120,13 @@ async def delete_user(
     if (is_removed := uc.delete(id)):
         uc.session.commit()
         return
-    return JSONResponse(
-        Message(message="Usuário não encontrado").model_dump(), status_code=404
-    )
+    return NotFoundException(detail="Usuário não encontrado")
 
 
 @router.post(
     "/generates_user",
     description="Cria usuário",
-    status_code=204,
+    status_code=201,
 )
 async def generates_user():
     fk = Faker()
@@ -140,7 +142,7 @@ async def generates_user():
         )
         uc.session.commit()
     except Exception as e:
-        return JSONResponse(Message(message=f"Erro ao inserir registro no banco. erro: {e.args}").model_dump(), 400)
+        return BadRequestException(detail=f"Erro ao inserir registro no banco. erro: {e.args}")
     return
 
 

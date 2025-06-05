@@ -1,5 +1,6 @@
 import time
 import asyncio
+import logging
 
 import uvicorn
 from fastapi import FastAPI
@@ -11,10 +12,19 @@ from app.auth.jwt import router as router_jwt_exemple
 from app.routers.users import router as users_router
 
 # Variaveis
-from app.properties import URL, PORT
+from app.properties import URL, PORT, APP_ENV
+from app.middleware.exception_handlers import setup_exception_handler
 
 
 # your code here
+doc_config = {}
+if APP_ENV not in ("dev", "local"):
+    doc_config = {
+        "docs_url": None,
+        "redoc_url": None,
+        "openapi_url": None,
+    }
+
 # inicializa a Aplicação, Running
 app = FastAPI(
     title="FastAPI",
@@ -22,7 +32,9 @@ app = FastAPI(
     servers=[
         { "url": f"{URL}:{PORT}", "description": "API Local" },
     ],
+    **doc_config,
 )
+setup_exception_handler(app)
 
 # Hosts permitidos acesso à API
 origins = [
@@ -48,12 +60,24 @@ app.include_router(router_jwt_exemple)   # jwt authentication
                                          # quais outros tipos de autenticação existem?
 
 
+# Configura o logging básico
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler("app.log"),
+    ],
+)
+
+logger = logging.getLogger(__name__)
+
 # endpoint padrão
 # > http://127.0.0.1:8000/
 @app.get("/")
 async def hello():
 # def hello():
-    await asyncio.sleep(10)
+    # await asyncio.sleep(10)
     # time.sleep(10)
     return "Hello, world!"
 
