@@ -1,4 +1,3 @@
-from fastapi import APIRouter
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
@@ -8,12 +7,8 @@ users = {
     "admin": "secret"
 }
 
-
 security = HTTPBasic()
-router = APIRouter(
-    prefix="/basic",
-    tags=["basic"]
-)
+
 
 # Checa se o usuário 
 def check_user(credentials: HTTPBasicCredentials = Depends(security)):
@@ -25,9 +20,3 @@ def check_user(credentials: HTTPBasicCredentials = Depends(security)):
                 headers={"WWW-Authenticate": "Basic"},
             )
     return credentials.username
-
-
-# autenticação basica
-@router.get("/")
-async def hello(username: str = Depends(check_user)):
-    return "Hello, Basic Authentication!"

@@ -21,33 +21,9 @@ fake_users_db = {
         "hashed_password": "$2b$12$eLRPAN0mpeEAnPf3h1rjhObBEI1.qazH2Q3KQbm4usGl9Z8pYbqGK",
     }
 }
-
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-
-class TokenData(BaseModel):
-    username: Optional[str] = None
-
-
-class User(BaseModel):
-    username: str
-
-
-class UserInDB(User):
-    hashed_password: str
-
-
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-router = APIRouter(
-    prefix="/jwt",
-    tags=["jwt"]
-)
 
 def generate_hashed_password(password: str):
     return pwd_context.hash(password)
@@ -105,28 +81,3 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     if user is None:
         raise credentials_exception
     return user
-
-
-@router.post("/token")
-async def login_for_access_token(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-) -> Token:
-    user = authenticate_user(fake_users_db, form_data.username, form_data.password)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
-    )
-    return Token(access_token=access_token, token_type="bearer")
-
-
-@router.get("/hello")
-async def hello(
-    current_user: Annotated[User, Depends(get_current_user)],
-):
-    return "Hello, Auth Jwt"
