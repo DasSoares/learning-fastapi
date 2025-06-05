@@ -7,8 +7,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 # metodos
-from app.auth.basic import router as router_basic_exemple
-from app.auth.jwt import router as router_jwt_exemple
+from app.routers.auth_basic import router as router_basic_exemple
+from app.routers.auth_jwt import router as router_jwt_exemple
 from app.routers.users import router as users_router
 
 # Variaveis
